@@ -10,6 +10,8 @@ int OpCode(char *op, HashItem* hashmap){
 		if(strncmp((const char *)hashmap[i].key,op,3) == 0)
 			return hashmap[i].val;
 	}
+	printf("%s is not a valid op\n",op);
+	exit(0);
 	return NOT_FOUND;
 }
 
@@ -19,12 +21,17 @@ inline int GPRegLookup(char *reg){
 		return op;
 	} else {
 		printf("Register %s not found in general purpose registers\n", reg);
+		exit(0);
 		return NOT_FOUND;
 	}
 }
 
 int isGP(char *reg){
-	if(reg[0] == 'R' || reg[0] == 'r'){
+	if(reg[0] == 'R'){
+		printf("Register %s must have a caps R\n",reg);
+		exit(0);
+	}
+	if(reg[0] == 'r'){
 		return 1;
 	} else {
 		return NOT_FOUND;
@@ -55,15 +62,22 @@ int SPRegLookup(char *reg){
 	}
 
 	printf("Register %s not found in special purpose registers\n",reg);
+	exit(0);
 	return NOT_FOUND; //never will be reached;
 }
 
 int parse9BitSigned(char *c){
+
 	c += 2; //skip the '0b'
 	int sign = (c[SIGN_BIT] == '1')? 0 : 1;	//get the sign bit
 	int final = (int) strtol(c,0,2); //get the val bits	
 	final |= sign << 9; //add on the sign bit
-	return sign & 0x1ff; //mask off the lower 9 bits
+	if(final > 0x1ff){
+		printf("Invalid 9 bit signed binary constant %s\n",c);
+		exit(0);
+	}
+
+	return final & 0x1ff; //mask off the lower 9 bits
 
 }
 
@@ -140,7 +154,8 @@ static HashItem opCodeLookup[] = {
 							instructions[instructionIndex].op |= GPRegLookup(tokens[tokenIndex]) << argumentNum * 9;	
 
 						} else {
-							printf("Invalid argument %s for opcode\n", tokens[tokenIndex]); //not found
+							printf("Invalid argument %s for opcode %d\n", tokens[tokenIndex],opcode); //not found
+							exit(0);
 						}
 					}
 					printf("0x%x\n",instructions[instructionIndex].op);
@@ -166,7 +181,8 @@ static HashItem opCodeLookup[] = {
 							instructions[instructionIndex].op |= GPRegLookup(tokens[tokenIndex]) << argumentNum * 9;	
 
 						} else {
-							printf("Invalid argument %s for opcode\n", tokens[tokenIndex]); //not found
+							printf("Invalid argument %s for opcode %d\n", tokens[tokenIndex],opcode); //not found
+							exit(0);
 						}
 					}
 					printf("0x%x\n",instructions[instructionIndex].op);
@@ -187,7 +203,7 @@ static HashItem opCodeLookup[] = {
 							instructions[instructionIndex].op |= GPRegLookup(tokens[tokenIndex]) << argumentNum * 9;	
 
 						} else {
-							printf("Invalid argument %s for opcode\n", tokens[tokenIndex]); //not found
+							printf("Invalid argument %s for opcode %d\n", tokens[tokenIndex],opcode); //not found
 						}
 					}
 
