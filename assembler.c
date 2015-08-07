@@ -107,13 +107,13 @@ static HashItem opCodeLookup[] = {
 	char *tokens[strlen(code)]; //should be enough
 	int tokenIndex;
 
-	pch = strtok(code," ");
+	pch = strtok(code," 	\n");
 	for(tokenIndex = 0; pch; ++tokenIndex){
 			tokens[tokenIndex] = (char *) malloc(strlen(pch) + 1);
 			strcpy(tokens[tokenIndex],pch);
 //			printf("tokens[%d] is located at %p, has size %lu. Current pch is %s.\n", tokenIndex, tokens[tokenIndex],sizeof(tokens[tokenIndex]), pch);
 
-			pch = strtok(0, " ");
+			pch = strtok(0, " 	\n");
 	}
 	tokens[tokenIndex + 1] = (char *)malloc(sizeof(char));
 	strcpy(tokens[tokenIndex + 1],"\0");
