@@ -143,7 +143,7 @@ static HashItem opCodeLookup[] = {
 							printf("Invalid argument %s for opcode\n", tokens[tokenIndex]); //not found
 						}
 					}
-					printf("Finished opcode with instruction 0x%x\n",instructions[instructionIndex].op);
+					printf("0x%x\n",instructions[instructionIndex].op);
 					tokenIndex++;
 
 					
@@ -169,7 +169,7 @@ static HashItem opCodeLookup[] = {
 							printf("Invalid argument %s for opcode\n", tokens[tokenIndex]); //not found
 						}
 					}
-					printf("Finished opcode with instruction 0x%x\n",instructions[instructionIndex].op);
+					printf("0x%x\n",instructions[instructionIndex].op);
 					tokenIndex++;
 					break;
 
@@ -195,7 +195,7 @@ static HashItem opCodeLookup[] = {
 					tokenIndex++;
 					instructions[instructionIndex].op |= parse9BitSigned(tokens[tokenIndex]);			//special case with B instructions. have to parse the constatnt	
 
-					printf("Finished opcode with instruction 0x%x\n",instructions[instructionIndex].op);
+					printf("0x%x\n",instructions[instructionIndex].op);
 					tokenIndex++;
 					break;
 
@@ -215,7 +215,7 @@ static HashItem opCodeLookup[] = {
 					instructions[instructionIndex].op |= parse16Bit(tokens[tokenIndex]);
 
 					tokenIndex++;
-					printf("Finished opcode with instruction 0x%x\n",instructions[instructionIndex].op);
+					printf("0x%x\n",instructions[instructionIndex].op);
 
 					
 					break;
