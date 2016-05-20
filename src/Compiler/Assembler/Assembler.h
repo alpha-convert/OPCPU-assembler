@@ -2,6 +2,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <streambuf>
+#include "utils.h"
 /***
 * @Author Joseph Cutler
 * @Date May 20, 2016
@@ -9,18 +15,24 @@
 */
 
 typedef uint32_t Instruction;
+typedef struct Expr{
+	std::string op;
+	std::vector<std::string> args;
+} Expr;
 constexpr uint32_t ctrl_mask = 0xF8000000;
 constexpr uint32_t data_mask = 0x7FFFFFF;
 
 class Assembler{
 public:
-	Assembler(std::string p);
+	Assembler();
 	~Assembler();
-private:
-	std::string program;
-	std::map<std::string,uint8_t> instruction_ctrls;
-	std::vector<uint32_t> final_bytecode;
+	void Assemble(const std::string &fname, std::vector<uint32_t> &assembled);
 
+private:
+	std::map<std::string,uint8_t> instruction_ctrls;
+	void Parse(const std::string &raw_program, std::vector<Expr> &parsed);
+
+protected:
 	const uint8_t add_ctrl = 0b00000;
 	const uint8_t sub_ctrl = 0b00001;
 	const uint8_t mul_ctrl = 0b00010;
