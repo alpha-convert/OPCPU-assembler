@@ -1,4 +1,5 @@
 #include "Assembler.h"
+#define DEBUG 1
 
 /**
  * @brief Return the control bits of instruction i
@@ -37,41 +38,83 @@ inline void set_data(Instruction &i, uint32_t data){
 
 
 Assembler::Assembler(){
-	{instruction_ctrls.insert({"add",add_ctrl});
-		instruction_ctrls.insert({"sub",sub_ctrl});
-		instruction_ctrls.insert({"mul",mul_ctrl});
-		instruction_ctrls.insert({"div",div_ctrl});
-		instruction_ctrls.insert({"and",and_ctrl});
-		instruction_ctrls.insert({"or" , or_ctrl});
-		instruction_ctrls.insert({"not",not_ctrl});
-		instruction_ctrls.insert({"loa",loa_ctrl});
-		instruction_ctrls.insert({"sto",sto_ctrl});
-		instruction_ctrls.insert({"shr",shr_ctrl});
-		instruction_ctrls.insert({"shl",shl_ctrl});
-		instruction_ctrls.insert({"beq",beq_ctrl});
-		instruction_ctrls.insert({"blt",blt_ctrl});
-		instruction_ctrls.insert({"ll" , ll_ctrl});}
+	instruction_ctrls.insert({"add",add_ctrl});
+	instruction_ctrls.insert({"sub",sub_ctrl});
+	instruction_ctrls.insert({"mul",mul_ctrl});
+	instruction_ctrls.insert({"div",div_ctrl});
+	instruction_ctrls.insert({"and",and_ctrl});
+	instruction_ctrls.insert({"or" , or_ctrl});
+	instruction_ctrls.insert({"not",not_ctrl});
+	instruction_ctrls.insert({"loa",loa_ctrl});
+	instruction_ctrls.insert({"sto",sto_ctrl});
+	instruction_ctrls.insert({"shr",shr_ctrl});
+	instruction_ctrls.insert({"shl",shl_ctrl});
+	instruction_ctrls.insert({"beq",beq_ctrl});
+	instruction_ctrls.insert({"blt",blt_ctrl});
+	instruction_ctrls.insert({"ll" , ll_ctrl});
 
 }
+
+Assembler::~Assembler(){}
 
 /**
  * 
  */
-void Assembler::Parse(const std::string &raw_program, std::vector<Expr> &parsed){
-	
+void Assembler::Parse(const std::string &raw_program, std::vector<Expression> &parsed){
+	//Split into lines
+	std::vector<std::string> lines;
+	boost::split(lines,raw_program,boost::is_any_of("\n"));
+
+	//Remove all empty lines
+	lines.erase(std::remove_if(lines.begin(),lines.end(),[](const std::string& s){
+		return s.empty();
+	}),lines.end());
+
+
+	for(const auto &expr_str: lines){
+		std::cout << "Parsing instruction: \"" <<  expr_str << "\"" <<std::endl;
+
+		//Split into tokens
+		std::vector<std::string> tokens;
+		boost::split(tokens,expr_str,boost::is_any_of(" \t"));
+
+		//Make sure it's one of the valid operations
+		bool valid_op = !(instruction_ctrls.find(tokens[0]) == instruction_ctrls.end());
+		assert(valid_op);
+
+		Expression expr;
+		//Take the first token (the op)
+		expr.op = tokens.at(0);
+		//Remove the first token
+		tokens.erase(tokens.begin());
+		//Set the rest to the args
+		expr.args = tokens;
+		//Add it to the list
+		parsed.push_back(expr);
+
+	}
+
 }
 
 /**
  *	Assemble the program
  */
 void Assembler::Assemble(const std::string &fname, std::vector<uint32_t> &assembled){
+	USE(fname);
+	USE(assembled);
+	printf("Assembling program from file %s\n",fname.c_str());
+
+	//Read file from disk into memory
 	std::string raw_program;
 	read_entire_file(fname,raw_program);
-	std::vector<Expr> parsed;
+	printf("Loaded text from file %s\n",fname.c_str());
+
+	//Parse the program into expressions
+	std::vector<Expression> parsed;
 	Parse(raw_program,parsed);
 
-	for(const auto & o : parsed){
-		printf("%s\n",o.op.c_str());
+	for(const auto &expr : parsed){
+		printf("%s:\n",expr.op.c_str());
 	}
 
 }

@@ -11,5 +11,7 @@
 #include "utils.h"
 
 int main(void){
-	std::string program;
+	Assembler a = Assembler();
+	std::vector<uint32_t> bytecode;
+	a.Assemble("testprog.asm",bytecode);
 }

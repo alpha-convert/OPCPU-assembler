@@ -7,6 +7,10 @@
 #include <fstream>
 #include <sstream>
 #include <streambuf>
+#include <algorithm>
+
+#include <boost/algorithm/string.hpp>
+
 #include "utils.h"
 /***
 * @Author Joseph Cutler
@@ -15,10 +19,10 @@
 */
 
 typedef uint32_t Instruction;
-typedef struct Expr{
+typedef struct Expression{
 	std::string op;
 	std::vector<std::string> args;
-} Expr;
+} Expression;
 constexpr uint32_t ctrl_mask = 0xF8000000;
 constexpr uint32_t data_mask = 0x7FFFFFF;
 
@@ -30,7 +34,7 @@ public:
 
 private:
 	std::map<std::string,uint8_t> instruction_ctrls;
-	void Parse(const std::string &raw_program, std::vector<Expr> &parsed);
+	void Parse(const std::string &raw_program, std::vector<Expression> &parsed);
 
 protected:
 	const uint8_t add_ctrl = 0b00000;
@@ -48,3 +52,4 @@ protected:
 	const uint8_t blt_ctrl = 0b01100;
 	const uint8_t ll_ctrl  = 0b01101;
 };
+
