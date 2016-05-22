@@ -1,10 +1,24 @@
 #include "Assembler.h"
 #define DEBUG 1
 
+constexpr const uint8_t Assembler::add_ctrl;
+constexpr const uint8_t Assembler::sub_ctrl;
+constexpr const uint8_t Assembler::mul_ctrl;
+constexpr const uint8_t Assembler::div_ctrl;
+constexpr const uint8_t Assembler::and_ctrl;
+constexpr const uint8_t Assembler::or_ctrl;
+constexpr const uint8_t Assembler::not_ctrl;
+constexpr const uint8_t Assembler::loa_ctrl;
+constexpr const uint8_t Assembler::sto_ctrl;
+constexpr const uint8_t Assembler::shr_ctrl;
+constexpr const uint8_t Assembler::shl_ctrl;
+constexpr const uint8_t Assembler::beq_ctrl;
+constexpr const uint8_t Assembler::blt_ctrl;
+constexpr const uint8_t Assembler::ll_ctrl;
+
 /**
  * @brief Return the control bits of instruction i
  */
-
 inline uint8_t ctrl_of(Instruction i){
 	return (i & ctrl_mask) >> 27;
 }
@@ -72,7 +86,6 @@ void Assembler::Parse(const std::string &raw_program, std::vector<Expression> &p
 
 
 	for(const auto &expr_str: lines){
-		std::cout << "Parsing instruction: \"" <<  expr_str << "\"" <<std::endl;
 
 		//Split into tokens
 		std::vector<std::string> tokens;
@@ -113,8 +126,22 @@ void Assembler::Assemble(const std::string &fname, std::vector<uint32_t> &assemb
 	std::vector<Expression> parsed;
 	Parse(raw_program,parsed);
 
+	//Go over each instruction
 	for(const auto &expr : parsed){
-		printf("%s:\n",expr.op.c_str());
-	}
+		//Grab the template
+		auto instr_template = instruction_ctrls.at(expr.op);
+		printf("%s:	0x%X -> ",expr.op.c_str(),instr_template);
 
+		Instruction final_instruction = 0;
+		set_ctrl(final_instruction,instr_template);
+		printf("0x%X\n",final_instruction);
+
+		switch(instr_template){
+			case add_ctrl:
+				break;
+			default:
+				break;
+		}
+
+	}
 }
