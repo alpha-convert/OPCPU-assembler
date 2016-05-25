@@ -11,7 +11,6 @@
 #  liable for incidental or consequential damages in connection with use of this specification.
 
                                                      One-Page CPU
-
 +-----------------+<--------+----32-bits----------------->+--------------------------------------------------+
 |                 |<5-bits >|<----------27-bits---------->|                                                  |
 |    Assembly     |  Ctrl   |          Data Layout        |                  Description                     |
@@ -38,7 +37,7 @@ At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
 #1)  SP (Stack Pointer)    Points to the top item on the stack.  #4)  FR (Flags Register)  Special CPU flags.
 #2)  FP (Frame Pointer)    Points to previous frame pointer.     #5)  WR (Word Register)   Initialized to 4.
 
-Special registers #0 to #5 are PC, SP, FP, ZR, FR, WR.  General registers #6 to #512 are named r1 to r506.
+Special registers #0 to #5 are PC, SP, FP, ZR, FR, WR.  General registers #6 to #511 are named r1 to r506.
 
 Flags Register (FR) Description
 

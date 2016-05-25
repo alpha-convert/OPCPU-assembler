@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <regex>
 #include <vector>
 #include <map>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <algorithm>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "utils.h"
 /***
@@ -25,6 +27,7 @@ typedef struct Expression{
 } Expression;
 constexpr uint32_t ctrl_mask = 0xF8000000;
 constexpr uint32_t data_mask = 0x7FFFFFF;
+constexpr uint16_t nine_bits = 0x1FF;
 
 class Assembler{
 public:
@@ -35,6 +38,9 @@ public:
 private:
 	std::map<std::string,uint8_t> instruction_ctrls;
 	void Parse(const std::string &raw_program, std::vector<Expression> &parsed);
+	inline uint16_t ParseRegister(std::string register_name);
+	inline uint16_t ParseConstant9(std::string constant);
+	inline uint16_t ParseConstant16(std::string constant);
 
 protected:
 	static constexpr const uint8_t add_ctrl = 0b00000;
@@ -51,5 +57,8 @@ protected:
 	static constexpr const uint8_t beq_ctrl = 0b01011;
 	static constexpr const uint8_t blt_ctrl = 0b01100;
 	static constexpr const uint8_t ll_ctrl  = 0b01101;
+
+	static std::map<std::string,uint16_t> reg_lookup;
+
 };
 

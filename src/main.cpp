@@ -13,5 +13,8 @@
 int main(void){
 	Assembler a = Assembler();
 	std::vector<uint32_t> bytecode;
-	a.Assemble("testprog.asm",bytecode);
+	a.Assemble("kernel.l1",bytecode);
+	for(const auto& b: bytecode){
+		printf("%x\n",b);
+	}
 }

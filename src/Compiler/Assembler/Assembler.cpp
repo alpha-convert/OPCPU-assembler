@@ -15,6 +15,35 @@ constexpr const uint8_t Assembler::shl_ctrl;
 constexpr const uint8_t Assembler::beq_ctrl;
 constexpr const uint8_t Assembler::blt_ctrl;
 constexpr const uint8_t Assembler::ll_ctrl;
+std::map<std::string,uint16_t> Assembler::reg_lookup;
+
+/**
+ *	Regex for a valid register name
+ */
+const std::string register_name_regex = 	"^(r|R)\\d{1,3}|(PC|SP|FP|ZR|FR|WR)$";
+/**
+ *	Regex for a general purpouse register
+ *	@note does not validate the validity of the register number
+ */
+const std::string gp_reg_regex =			"^(r|R)\\d{1,3}$";
+/**
+ *	Regex for a special purpouse register
+ */
+const std::string sp_reg_regex = 			"^(PC|SP|FP|ZR|FR|WR)$";
+
+template <typename T>
+bool validate(T s, const std::function<bool(T)>& validation, std::string warning = "Error validating."){
+	auto valid = validation(s);
+	if(valid) return true;
+	std::cout << warning << std::endl;
+	return false;
+}
+
+inline bool validate_on_regex(const std::string &s, const std::string &regex, const std::string &warning = ""){
+	return validate<std::string>(s, [=](std::string s) -> bool{
+			return std::regex_match(s,std::regex(regex));
+			},warning);
+}
 
 /**
  * @brief Return the control bits of instruction i
@@ -50,6 +79,15 @@ inline void set_data(Instruction &i, uint32_t data){
 	i |= (data & (0b00000 << 27)); //make sure the upper 5 bits are clear as not to change the ctrl
 }
 
+/**
+ * @brief set an argument in position pos to the value of iarg
+ */
+inline void set_arg(Instruction &i, uint8_t pos, uint16_t iarg){
+	assert(pos <= 2);
+	i |= (iarg & nine_bits) << (18 - (9 * pos));
+}
+
+
 
 Assembler::Assembler(){
 	instruction_ctrls.insert({"add",add_ctrl});
@@ -67,6 +105,17 @@ Assembler::Assembler(){
 	instruction_ctrls.insert({"blt",blt_ctrl});
 	instruction_ctrls.insert({"ll" , ll_ctrl});
 
+	reg_lookup["PC"] = 0;
+	reg_lookup["SP"] = 1;
+	reg_lookup["FP"] = 2;
+	reg_lookup["ZR"] = 3;
+	reg_lookup["FR"] = 4;
+	reg_lookup["WR"] = 5;
+
+	for(int r = 1; r < 506;++r){
+		reg_lookup["r" + std::to_string(r)] = r + 5;
+	}
+
 }
 
 Assembler::~Assembler(){}
@@ -81,8 +130,8 @@ void Assembler::Parse(const std::string &raw_program, std::vector<Expression> &p
 
 	//Remove all empty lines
 	lines.erase(std::remove_if(lines.begin(),lines.end(),[](const std::string& s){
-		return s.empty();
-	}),lines.end());
+				return s.empty();
+				}),lines.end());
 
 
 	for(const auto &expr_str: lines){
@@ -110,6 +159,31 @@ void Assembler::Parse(const std::string &raw_program, std::vector<Expression> &p
 }
 
 /**
+ *	@brief Go from a register's name to the 9 bit code for the data bits
+ *	@return Will be a 9 bit value
+ */
+inline uint16_t Assembler::ParseRegister(std::string register_name){
+	//Make sure it's a legit register
+	validate_on_regex(register_name,register_name_regex,"Invalid register name");
+	return reg_lookup[register_name];
+}
+
+
+inline uint16_t Assembler::ParseConstant9(std::string constant){
+	return ParseConstant16(constant) & nine_bits;
+}
+
+inline uint16_t Assembler::ParseConstant16(std::string constant){
+	uint16_t retval;
+	std::stringstream ss;
+	ss << std::hex << constant;
+	ss >> retval;
+	return retval;
+}
+
+
+
+/**
  *	Assemble the program
  */
 void Assembler::Assemble(const std::string &fname, std::vector<uint32_t> &assembled){
@@ -130,18 +204,74 @@ void Assembler::Assemble(const std::string &fname, std::vector<uint32_t> &assemb
 	for(const auto &expr : parsed){
 		//Grab the template
 		auto instr_template = instruction_ctrls.at(expr.op);
-		printf("%s:	0x%X -> ",expr.op.c_str(),instr_template);
 
 		Instruction final_instruction = 0;
 		set_ctrl(final_instruction,instr_template);
-		printf("0x%X\n",final_instruction);
 
+		//This part is so ugly
 		switch(instr_template){
 			case add_ctrl:
-				break;
+			case sub_ctrl:
+			case mul_ctrl:
+			case div_ctrl:
+			case and_ctrl:
+			case or_ctrl:
+				{
+					auto arg0 = ParseRegister(expr.args.at(0));
+					auto arg1 = ParseRegister(expr.args.at(1));
+					auto arg2 = ParseRegister(expr.args.at(2));
+					//args go from left to right
+					set_arg(final_instruction,0,arg0);
+					set_arg(final_instruction,1,arg1);
+					set_arg(final_instruction,2,arg2);
+
+					break;
+				}
+
+			case not_ctrl:
+			case loa_ctrl:
+			case sto_ctrl:
+			case shr_ctrl:
+			case shl_ctrl:
+				{
+					auto arg0 = ParseRegister(expr.args.at(0));
+					auto arg1 = ParseRegister(expr.args.at(1));
+					set_arg(final_instruction,0,arg0);
+					set_arg(final_instruction,1,arg1);
+					set_arg(final_instruction,2,0);
+
+					break;
+				}
+			case beq_ctrl:
+			case blt_ctrl:
+				{
+					auto arg0 = ParseRegister(expr.args.at(0));
+					auto arg1 = ParseRegister(expr.args.at(1));
+					auto arg_const = ParseConstant9(expr.args.at(2));
+					set_arg(final_instruction,0,arg0);
+					set_arg(final_instruction,1,arg1);
+					set_arg(final_instruction,2,arg_const);
+
+					break;
+				}
+
+			case ll_ctrl:
+				{
+					auto arg0 = ParseRegister(expr.args.at(0));
+					auto arg_const = ParseConstant16(expr.args.at(1));
+					set_arg(final_instruction,0,arg0);
+					//this is a 16 bit constant. just drop it in, no mask.
+					final_instruction |= arg_const;
+
+					break;
+				}
+
 			default:
+				printf("Something's wrong. Invalid instruction template\n");
 				break;
 		}
+		assembled.push_back(final_instruction);
 
 	}
 }
+
