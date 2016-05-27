@@ -41,6 +41,7 @@ private:
 	inline uint16_t ParseRegister(std::string register_name);
 	inline uint16_t ParseConstant9(std::string constant);
 	inline uint16_t ParseConstant16(std::string constant);
+	inline uint16_t ParseDirectWord(std::string constant);
 
 protected:
 	static constexpr const uint8_t add_ctrl = 0b00000;
@@ -57,6 +58,7 @@ protected:
 	static constexpr const uint8_t beq_ctrl = 0b01011;
 	static constexpr const uint8_t blt_ctrl = 0b01100;
 	static constexpr const uint8_t ll_ctrl  = 0b01101;
+	static constexpr const uint8_t dw_ctrl  = 0b01110;
 
 	static std::map<std::string,uint16_t> reg_lookup;
 

@@ -15,6 +15,7 @@ constexpr const uint8_t Assembler::shl_ctrl;
 constexpr const uint8_t Assembler::beq_ctrl;
 constexpr const uint8_t Assembler::blt_ctrl;
 constexpr const uint8_t Assembler::ll_ctrl;
+constexpr const uint8_t Assembler::dw_ctrl;
 std::map<std::string,uint16_t> Assembler::reg_lookup;
 
 /**
@@ -104,6 +105,8 @@ Assembler::Assembler(){
 	instruction_ctrls.insert({"beq",beq_ctrl});
 	instruction_ctrls.insert({"blt",blt_ctrl});
 	instruction_ctrls.insert({"ll" , ll_ctrl});
+	instruction_ctrls.insert({"dw" , dw_ctrl});
+	instruction_ctrls.insert({"DW" , dw_ctrl});
 
 	reg_lookup["PC"] = 0;
 	reg_lookup["SP"] = 1;
@@ -127,6 +130,8 @@ void Assembler::Parse(const std::string &raw_program, std::vector<Expression> &p
 	//Split into lines
 	std::vector<std::string> lines;
 	boost::split(lines,raw_program,boost::is_any_of("\n"));
+
+	parsed.reserve(lines.size());
 
 	//Remove all empty lines
 	lines.erase(std::remove_if(lines.begin(),lines.end(),[](const std::string& s){
@@ -181,6 +186,13 @@ inline uint16_t Assembler::ParseConstant16(std::string constant){
 	return retval;
 }
 
+inline uint16_t Assembler::ParseDirectWord(std::string constant){
+	uint32_t retval;
+	std::stringstream ss;
+	ss << std::hex << constant;
+	ss >> retval;
+	return retval;
+}
 
 
 /**
@@ -263,6 +275,12 @@ void Assembler::Assemble(const std::string &fname, std::vector<uint32_t> &assemb
 					//this is a 16 bit constant. just drop it in, no mask.
 					final_instruction |= arg_const;
 
+					break;
+				}
+
+			case dw_ctrl:
+				{
+					final_instruction = ParseDirectWord(expr.args.at(0));
 					break;
 				}
 
